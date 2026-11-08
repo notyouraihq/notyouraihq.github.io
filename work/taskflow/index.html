@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TaskFlow · Kanban Project Management (Demo by NotYourAI)</title>
+<meta name="description" content="TaskFlow is a concept Kanban project-management tool with drag-and-drop boards, priorities and sprint progress. A portfolio demo by NotYourAI.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f5f1;--surface:#fff;--col:#efede7;--ink:#18181b;--ink2:#3f3f46;--muted:#78716c;--line:#e7e4dc;
+  --accent:#ff5a36;--accent-d:#e8441f;--accent-soft:#fff0eb;
+  --todo:#a8a29e;--progress:#3b82f6;--review:#f59e0b;--done:#22c55e;
+  --high:#dc2626;--high-bg:#fee2e2;--med:#b45309;--med-bg:#fef3c7;--low:#15803d;--low-bg:#dcfce7;
+  --shadow:0 1px 2px rgba(24,24,27,.05),0 4px 14px -6px rgba(24,24,27,.10);
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:"DM Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;min-height:100vh}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,.sg{font-family:"Space Grotesk","DM Sans",sans-serif}
+
+.appbar{height:60px;display:flex;align-items:center;gap:18px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.brand{display:flex;align-items:center;gap:9px;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:19px;letter-spacing:-.03em}
+.brand .mark{width:30px;height:30px;border-radius:9px;background:var(--ink);display:grid;place-items:center}
+.crumbs{display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:500;min-width:0}
+.crumbs b{color:var(--ink);font-weight:600;white-space:nowrap}
+.crumbs .sep{opacity:.5}
+.appbar .right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.avatars{display:flex}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;border:2px solid #fff;flex:none}
+.avatars .av{margin-left:-8px}.avatars .av:first-child{margin-left:0}
+.avatars .more{background:#e7e5e4;color:var(--ink2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 15px;border-radius:10px;font-weight:600;font-size:14px;white-space:nowrap;transition:background .2s,transform .15s,box-shadow .2s}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 6px 16px -6px rgba(255,90,54,.7)}
+.btn.primary:hover{background:var(--accent-d);transform:translateY(-1px)}
+.btn.ghost{background:var(--surface);border:1px solid var(--line);color:var(--ink2)}
+.btn.ghost:hover{background:#faf9f7}
+.btn.sm{padding:7px 12px;font-size:13px}
+
+.page{padding:20px 24px 80px}
+.proj{display:flex;align-items:flex-end;gap:24px;margin-bottom:18px;flex-wrap:wrap}
+.proj-l{min-width:0}
+.proj h1{font-size:26px;letter-spacing:-.03em;display:flex;align-items:center;gap:10px}
+.proj h1 .emo{font-size:22px}
+.proj p{color:var(--muted);font-weight:500;margin-top:2px}
+.tabs{display:flex;gap:4px;margin-top:12px}
+.tabs button{padding:6px 12px;border-radius:8px;font-weight:600;color:var(--muted);font-size:13px}
+.tabs button.on{background:var(--ink);color:#fff}
+.progress-box{margin-left:auto;width:min(360px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+.pb-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:600;font-size:13px}
+.pb-top b{font-family:"Space Grotesk",sans-serif;font-size:20px;letter-spacing:-.02em}
+.pb-top span{color:var(--muted)}
+.pbar{height:10px;border-radius:99px;background:#f0eee9;margin-top:8px;overflow:hidden;display:flex}
+.pbar i{display:block;height:100%;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.pbar .d{background:var(--done)}.pbar .r{background:var(--review)}.pbar .p{background:var(--progress)}
+.pb-legend{display:flex;gap:12px;margin-top:8px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.pb-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 11px;color:var(--muted);width:240px;max-width:100%}
+.search input{border:0;outline:0;background:none;width:100%}
+.search svg,.ic{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.fchip{padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:12.5px;color:var(--ink2)}
+.fchip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.toolbar .hint{margin-left:auto;color:var(--muted);font-size:12.5px}
+
+.board{display:grid;grid-template-columns:repeat(4,minmax(250px,1fr));gap:14px;overflow-x:auto;padding-bottom:6px;align-items:start;-webkit-overflow-scrolling:touch}
+.col{background:var(--col);border-radius:16px;padding:10px;min-height:300px;transition:background .2s,box-shadow .2s}
+.col.over{background:#e8e5dc;box-shadow:inset 0 0 0 2px var(--c)}
+.col-head{display:flex;align-items:center;gap:8px;padding:4px 4px 10px}
+.col-head .dot{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.col-head h3{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.count{font-size:12px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.7);padding:0 8px;border-radius:99px;transition:transform .3s}
+.count.pulse{animation:pulse .5s}
+@keyframes pulse{50%{transform:scale(1.3);background:#fff;color:var(--ink)}}
+.col-add{margin-left:auto;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:var(--muted);font-size:18px;line-height:1}
+.col-add:hover{background:rgba(255,255,255,.8);color:var(--ink)}
+.list{display:flex;flex-direction:column;gap:9px;min-height:60px}
+.empty{border:1.5px dashed #d6d3cb;border-radius:12px;padding:16px;text-align:center;color:var(--muted);font-size:12.5px}
+
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px;box-shadow:var(--shadow);cursor:grab;transition:box-shadow .2s,transform .2s,opacity .2s;user-select:none}
+.card:hover{box-shadow:0 2px 4px rgba(24,24,27,.06),0 12px 24px -10px rgba(24,24,27,.22)}
+.card:active{cursor:grabbing}
+.card.dragging{opacity:.35;transform:scale(.98)}
+.card.lift{transform:scale(1.04) rotate(-1.5deg);box-shadow:0 20px 40px -12px rgba(24,24,27,.35);z-index:20}
+.card.new{animation:cardIn .55s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes cardIn{from{opacity:0;transform:translateY(-10px) scale(.92)}to{opacity:1;transform:none}}
+.card.glow{box-shadow:0 0 0 2px var(--accent),0 12px 24px -10px rgba(255,90,54,.45)}
+.c-top{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.prio{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:5px}
+.prio::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.prio.high{color:var(--high);background:var(--high-bg)}
+.prio.medium{color:var(--med);background:var(--med-bg)}
+.prio.low{color:var(--low);background:var(--low-bg)}
+.tag{font-size:11px;font-weight:600;color:var(--muted);background:#f5f5f4;padding:2px 8px;border-radius:6px}
+.del{margin-left:auto;width:22px;height:22px;border-radius:6px;color:var(--muted);font-size:16px;line-height:1;opacity:0;transition:opacity .15s,background .15s}
+.card:hover .del,.del:focus-visible{opacity:1}
+.del:hover{background:#f5f5f4;color:var(--high)}
+.card h4{font-size:14px;font-weight:600;line-height:1.35;color:var(--ink);overflow-wrap:anywhere}
+.col[data-status="done"] .card h4{color:var(--muted);text-decoration:line-through;text-decoration-color:#d6d3d1}
+.c-foot{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--muted);font-weight:500}
+.c-foot .cid{font-family:"Space Grotesk",sans-serif;font-weight:600}
+.c-foot .av{margin-left:auto;width:24px;height:24px;font-size:10px;border:0}
+.placeholder{height:52px;border-radius:12px;border:2px dashed var(--c);background:rgba(255,255,255,.5);flex:none}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(24,24,27,.45);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px;z-index:60;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.modal-bg.open{opacity:1;visibility:visible}
+.modal{width:min(460px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border-radius:18px;padding:20px;box-shadow:0 30px 70px -20px rgba(24,24,27,.45);transform:translateY(14px) scale(.97);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.modal-bg.open .modal{transform:none}
+.modal.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.m-head{display:flex;align-items:center;margin-bottom:14px}
+.m-head h2{font-size:19px;letter-spacing:-.02em}
+.m-head button{margin-left:auto;width:30px;height:30px;border-radius:8px;font-size:20px;color:var(--muted)}
+.m-head button:hover{background:#f5f5f4}
+.fld{display:block;margin-bottom:12px}
+.fld>span{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.fld input,.fld select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#fcfbfa;outline:0;transition:border-color .2s,box-shadow .2s;font-size:14px}
+.fld input:focus,.fld select:focus,.fld .flash{border-color:var(--accent);box-shadow:0 0 0 4px rgba(255,90,54,.15)}
+.fld input.err{border-color:var(--high);box-shadow:0 0 0 4px rgba(220,38,38,.12)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;border-radius:10px;border:1px solid var(--line);font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;background:#fcfbfa}
+.seg span::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--pc)}
+.seg input:checked+span{border-color:var(--pc);background:var(--pbg);color:var(--pc);box-shadow:0 0 0 3px var(--pbg)}
+.seg input:focus-visible+span{outline:2px solid var(--ink)}
+.m-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+
+.toast{position:fixed;right:20px;bottom:20px;background:var(--ink);color:#fff;padding:11px 15px;border-radius:12px;font-weight:600;font-size:13px;box-shadow:0 16px 36px -12px rgba(0,0,0,.5);transform:translateY(16px);opacity:0;transition:all .3s;z-index:70;pointer-events:none;max-width:calc(100vw - 40px)}
+.toast.show{transform:none;opacity:1}
+
+.badge{position:fixed;left:12px;bottom:12px;z-index:9000;display:inline-flex;align-items:center;gap:7px;padding:7px 12px 7px 8px;border-radius:99px;background:var(--ink);color:#fff;font-size:12px;font-weight:600;box-shadow:0 8px 24px -8px rgba(0,0,0,.5);transition:transform .2s}
+.badge:hover{transform:translateY(-2px)}
+.badge span{width:18px;height:18px;border-radius:6px;background:linear-gradient(135deg,#6366f1,#ec4899);display:grid;place-items:center;font-size:10px;font-weight:800}
+
+.tour-cursor{position:fixed;left:0;top:0;z-index:10000;pointer-events:none;opacity:0;transition-property:transform,opacity;transition-duration:.6s,.3s;transition-timing-function:cubic-bezier(.45,0,.2,1),ease;filter:drop-shadow(0 3px 5px rgba(0,0,0,.35))}
+.tour-cursor.show{opacity:1}
+.tour-cursor svg{display:block}
+.tour-cursor .ripple{position:absolute;left:-14px;top:-14px;width:36px;height:36px;border-radius:50%;border:3px solid rgba(255,90,54,.95);opacity:0}
+.tour-cursor.click .ripple{animation:ripple .45s ease-out}
+@keyframes ripple{from{transform:scale(.3);opacity:1}to{transform:scale(1.4);opacity:0}}
+
+@media (max-width:900px){
+  .crumbs .proj-crumb,.crumbs .sep{display:none}
+  .progress-box{margin-left:0;width:100%}
+  .toolbar .hint{display:none}
+}
+@media (max-width:600px){
+  .appbar{padding:0 14px;gap:10px}
+  .crumbs{display:none}
+  .avatars{display:none}
+  .page{padding:16px 14px 80px}
+  .proj h1{font-size:22px}
+  .board{grid-template-columns:repeat(4,minmax(250px,82vw));margin:0 -14px;padding:0 14px 6px;scroll-snap-type:x proximity}
+  .col{scroll-snap-align:start}
+  .search{width:100%}
+  .two{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<header class="appbar">
+  <a class="brand" href="#"><span class="mark"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M5 6h9M5 12h14M5 18h6"/><circle cx="19" cy="6" r="1.6" fill="#ff5a36" stroke="none"/></svg></span>TaskFlow</a>
+  <div class="crumbs"><span>Acme Studio</span><span class="sep">/</span><span class="proj-crumb">Projects</span><span class="sep">/</span><b>Website Relaunch</b></div>
+  <div class="right">
+    <div class="avatars" id="team"></div>
+    <button class="btn primary" id="newTask"><span style="font-size:17px;line-height:1">+</span> New task</button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="proj">
+    <div class="proj-l">
+      <h1><span class="emo">🚀</span>Website Relaunch</h1>
+      <p>Sprint 14 · 3 – 17 Nov 2026 · 9 days left</p>
+      <div class="tabs"><button class="on">Board</button><button>List</button><button>Timeline</button><button>Docs</button></div>
+    </div>
+    <div class="progress-box" aria-live="polite">
+      <div class="pb-top"><span>Sprint progress</span><b id="pct">0%</b></div>
+      <div class="pbar"><i class="d" id="barD"></i><i class="r" id="barR"></i><i class="p" id="barP"></i></div>
+      <div class="pb-legend"><span><i style="background:var(--done)"></i><b id="nDone">0</b> of <b id="nAll">0</b> done</span><span><i style="background:var(--review)"></i>In review</span><span><i style="background:var(--progress)"></i>In progress</span></div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="search" placeholder="Filter tasks…" aria-label="Filter tasks"></label>
+    <button class="fchip on" data-f="all">All</button>
+    <button class="fchip" data-f="high">🔥 High priority</button>
+    <button class="fchip" data-f="mine">👤 Assigned to me</button>
+    <span class="hint">Drag cards between columns · changes save automatically</span>
+    <button class="btn ghost sm" id="resetBtn" title="Restore the demo data">↺ Reset demo</button>
+  </div>
+
+  <section class="board" id="board"></section>
+</main>
+
+<div class="modal-bg" id="modal" aria-hidden="true">
+  <form class="modal" id="taskForm" novalidate role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="m-head"><h2 id="mTitle">New task</h2><button type="button" id="mClose" aria-label="Close">×</button></div>
+    <label class="fld"><span>Title</span><input id="fTitle" maxlength="90" placeholder="e.g. Design onboarding emails" autocomplete="off"></label>
+    <div class="two">
+      <label class="fld"><span>Assignee</span><select id="fAssignee"></select></label>
+      <label class="fld"><span>Column</span><select id="fStatus"></select></label>
+    </div>
+    <div class="fld"><span>Priority</span>
+      <div class="seg" id="fPrio">
+        <label style="--pc:var(--low);--pbg:var(--low-bg)"><input type="radio" name="prio" value="low"><span>Low</span></label>
+        <label style="--pc:var(--med);--pbg:var(--med-bg)"><input type="radio" name="prio" value="medium" checked><span>Medium</span></label>
+        <label style="--pc:var(--high);--pbg:var(--high-bg)"><input type="radio" name="prio" value="high"><span>High</span></label>
+      </div>
+    </div>
+    <label class="fld"><span>Label</span><select id="fTag"><option>Design</option><option>Engineering</option><option>Marketing</option><option>Content</option><option>Research</option></select></label>
+    <div class="m-foot"><button type="button" class="btn ghost" id="mCancel">Cancel</button><button type="submit" class="btn primary" id="mSubmit">Add task</button></div>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<a class="badge" href="https://notyouraihq.github.io" target="_blank" rel="noopener"><span>N</span>Demo by NotYourAI</a>
+<div class="tour-cursor" id="tourCursor" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 2l16 9.5-7 1.6-3.6 6.9z" fill="#18181b" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg><span class="ripple"></span></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const KEY = 'taskflow.demo.v1';
+  const ME = 'AK';
+
+  const PEOPLE = {
+    AK: {name:'Aisha Khan', color:'#f97316'},
+    RM: {name:'Rohan Mehta', color:'#3b82f6'},
+    SL: {name:'Sara Lee', color:'#a855f7'},
+    DP: {name:'Dev Patel', color:'#10b981'}
+  };
+  const COLS = [
+    {id:'todo', name:'To Do', c:'var(--todo)'},
+    {id:'progress', name:'In Progress', c:'var(--progress)'},
+    {id:'review', name:'Review', c:'var(--review)'},
+    {id:'done', name:'Done', c:'var(--done)'}
+  ];
+  const PRIO = {high:'High', medium:'Medium', low:'Low'};
+  const SEED = [
+    {id:101, title:'Write copy for the new pricing page', who:'SL', prio:'medium', tag:'Content', due:'Nov 14', cm:2, status:'todo'},
+    {id:102, title:'Set up analytics events for signup funnel', who:'DP', prio:'high', tag:'Engineering', due:'Nov 12', cm:4, status:'todo'},
+    {id:103, title:'Collect testimonials from 5 customers', who:'AK', prio:'low', tag:'Marketing', due:'Nov 16', cm:0, status:'todo'},
+    {id:104, title:'Redesign checkout flow', who:'RM', prio:'high', tag:'Design', due:'Nov 10', cm:7, status:'progress'},
+    {id:105, title:'Migrate blog to headless CMS', who:'DP', prio:'medium', tag:'Engineering', due:'Nov 13', cm:3, status:'progress'},
+    {id:106, title:'Hero illustration variations', who:'SL', prio:'low', tag:'Design', due:'Nov 15', cm:1, status:'progress'},
+    {id:107, title:'Responsive mobile navigation', who:'RM', prio:'medium', tag:'Engineering', due:'Nov 9', cm:5, status:'review'},
+    {id:108, title:'SEO meta tags audit', who:'AK', prio:'medium', tag:'Marketing', due:'Nov 11', cm:2, status:'review'},
+    {id:109, title:'Finalize brand colour palette', who:'SL', prio:'low', tag:'Design', due:'Nov 5', cm:6, status:'done'},
+    {id:110, title:'Competitor research summary', who:'AK', prio:'medium', tag:'Research', due:'Nov 4', cm:3, status:'done'},
+    {id:111, title:'Set up staging environment', who:'DP', prio:'high', tag:'Engineering', due:'Nov 6', cm:1, status:'done'}
+  ];
+
+  let state;
+  function seedState() { return {tasks: SEED.map(t => ({...t})), nextId: 112}; }
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if (s && Array.isArray(s.tasks) && s.nextId) return s;
+    } catch (e) { /* ignore corrupt or blocked storage */ }
+    return seedState();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ } }
+  state = load();
+
+  let filter = 'all', query = '';
+  const board = $('#board');
+
+  $('#team').innerHTML = Object.entries(PEOPLE).map(([k, p]) => `<span class="av" style="background:${p.color}" title="${p.name}">${k}</span>`).join('') + '<span class="av more">+3</span>';
+  $('#fAssignee').innerHTML = Object.entries(PEOPLE).map(([k, p]) => `<option value="${k}">${p.name}</option>`).join('');
+  $('#fStatus').innerHTML = COLS.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+  function cardHTML(t) {
+    const p = PEOPLE[t.who] || {name:'Unassigned', color:'#a8a29e'};
+    return `<article class="card" draggable="true" data-id="${t.id}" tabindex="0" aria-label="${esc(t.title)}">
+      <div class="c-top"><span class="prio ${t.prio}">${PRIO[t.prio]}</span><span class="tag">${esc(t.tag)}</span><button class="del" title="Delete task" aria-label="Delete task">×</button></div>
+      <h4>${esc(t.title)}</h4>
+      <div class="c-foot"><span class="cid">TF-${t.id}</span><span>📅 ${esc(t.due)}</span>${t.cm ? `<span>💬 ${t.cm}</span>` : ''}<span class="av" style="background:${p.color}" title="${esc(p.name)}">${esc(t.who)}</span></div>
+    </article>`;
+  }
+  function visible(t) {
+    if (filter === 'high' && t.prio !== 'high') return false;
+    if (filter === 'mine' && t.who !== ME) return false;
+    if (query && !t.title.toLowerCase().includes(query)) return false;
+    return true;
+  }
+  function render(newId) {
+    board.innerHTML = COLS.map(c => {
+      const items = state.tasks.filter(t => t.status === c.id && visible(t));
+      return `<div class="col" data-status="${c.id}" style="--c:${c.c}">
+        <div class="col-head"><span class="dot"></span><h3>${c.name}</h3><span class="count">${items.length}</span><button class="col-add" data-add="${c.id}" title="Add task to ${c.name}" aria-label="Add task to ${c.name}">+</button></div>
+        <div class="list">${items.map(cardHTML).join('') || '<div class="empty">Drop tasks here</div>'}</div></div>`;
+    }).join('');
+    if (newId) { const el = cardEl(newId); if (el) el.classList.add('new', 'glow'); setTimeout(() => el && el.classList.remove('glow'), 1800); }
+    updateMeta();
+  }
+  function updateMeta() {
+    const all = state.tasks.length, by = s => state.tasks.filter(t => t.status === s).length;
+    const d = by('done'), r = by('review'), p = by('progress');
+    const pct = all ? Math.round(d / all * 100) : 0;
+    $('#pct').textContent = pct + '%';
+    $('#nDone').textContent = d; $('#nAll').textContent = all;
+    $('#barD').style.width = (all ? d / all * 100 : 0) + '%';
+    $('#barR').style.width = (all ? r / all * 100 : 0) + '%';
+    $('#barP').style.width = (all ? p / all * 100 : 0) + '%';
+    document.querySelectorAll('.col').forEach(col => {
+      const n = col.querySelectorAll('.card').length, cnt = col.querySelector('.count');
+      if (cnt.textContent !== String(n)) { cnt.textContent = n; cnt.classList.remove('pulse'); void cnt.offsetWidth; cnt.classList.add('pulse'); }
+      const list = col.querySelector('.list'), empty = list.querySelector('.empty');
+      if (n && empty) empty.remove();
+      if (!n && !empty && !list.querySelector('.placeholder')) list.insertAdjacentHTML('beforeend', '<div class="empty">Drop tasks here</div>');
+    });
+  }
+  const cardEl = id => board.querySelector(`.card[data-id="${id}"]`);
+  const listOf = s => board.querySelector(`.col[data-status="${s}"] .list`);
+
+  // Rebuild task order/status from the DOM (hidden/filtered tasks keep their relative position at the end)
+  function syncFromDOM() {
+    const byId = new Map(state.tasks.map(t => [String(t.id), t]));
+    const seen = new Set(), out = [];
+    COLS.forEach(c => {
+      listOf(c.id).querySelectorAll('.card').forEach(el => {
+        const t = byId.get(el.dataset.id); if (!t) return;
+        t.status = c.id; out.push(t); seen.add(el.dataset.id);
+      });
+    });
+    state.tasks.forEach(t => { if (!seen.has(String(t.id))) out.push(t); });
+    state.tasks = out;
+    save(); updateMeta();
+  }
+
+  /* ---------- Drag & drop ---------- */
+  let dragId = null;
+  const ph = document.createElement('div'); ph.className = 'placeholder';
+  function afterEl(list, y) {
+    const cards = [...list.querySelectorAll('.card:not(.dragging)')];
+    return cards.find(c => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; }) || null;
+  }
+  board.addEventListener('dragstart', e => {
+    const card = e.target.closest && e.target.closest('.card'); if (!card) return;
+    dragId = card.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragId);
+    ph.style.height = card.offsetHeight + 'px';
+    requestAnimationFrame(() => card.classList.add('dragging'));
+  });
+  board.addEventListener('dragend', () => {
+    const c = dragId && cardEl(dragId); if (c) c.classList.remove('dragging');
+    ph.remove(); document.querySelectorAll('.col.over').forEach(c => c.classList.remove('over'));
+    dragId = null; updateMeta();
+  });
+  board.addEventListener('dragover', e => {
+    const col = e.target.closest('.col'); if (!col || !dragId) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('.col.over').forEach(c => c !== col && c.classList.remove('over'));
+    col.classList.add('over');
+    const list = col.querySelector('.list'), after = afterEl(list, e.clientY);
+    const empty = list.querySelector('.empty'); if (empty) empty.remove();
+    if (after) { if (ph.nextSibling !== after) list.insertBefore(ph, after); }
+    else if (list.lastElementChild !== ph) list.appendChild(ph);
+  });
+  board.addEventListener('dragleave', e => {
+    const col = e.target.closest('.col');
+    if (col && !col.contains(e.relatedTarget)) { col.classList.remove('over'); }
+  });
+  board.addEventListener('drop', e => {
+    const col = e.target.closest('.col'); if (!col || !dragId) return;
+    e.preventDefault();
+    const card = cardEl(dragId), list = col.querySelector('.list');
+    if (ph.parentNode === list) list.insertBefore(card, ph); else list.appendChild(card);
+    ph.remove(); card.classList.remove('dragging'); col.classList.remove('over');
+    const moved = state.tasks.find(t => String(t.id) === dragId);
+    const from = moved && moved.status;
+    syncFromDOM();
+    if (moved && from !== moved.status) toast(`Moved “${moved.title}” to ${COLS.find(c => c.id === moved.status).name}${moved.status === 'done' ? ' 🎉' : ''}`);
+  });
+  board.addEventListener('click', e => {
+    const add = e.target.closest('[data-add]');
+    if (add) return openModal(add.dataset.add);
+    const del = e.target.closest('.del');
+    if (del) {
+      const card = del.closest('.card'), id = card.dataset.id;
+      card.animate([{opacity:1, transform:'none'}, {opacity:0, transform:'scale(.9)'}], {duration:200}).finished.then(() => {
+        state.tasks = state.tasks.filter(t => String(t.id) !== id); save(); render();
+      });
+    }
+  });
+
+  /* ---------- Filters ---------- */
+  document.querySelectorAll('.fchip').forEach(b => b.addEventListener('click', () => {
+    filter = b.dataset.f;
+    document.querySelectorAll('.fchip').forEach(x => x.classList.toggle('on', x === b));
+    render();
+  }));
+  $('#search').addEventListener('input', e => { query = e.target.value.trim().toLowerCase(); render(); });
+
+  /* ---------- Modal ---------- */
+  const modal = $('#modal'), form = $('#taskForm'), fTitle = $('#fTitle');
+  function openModal(status = 'todo') {
+    form.reset();
+    fTitle.classList.remove('err');
+    $('#fStatus').value = status;
+    $('#fAssignee').value = ME;
+    modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
+    setTimeout(() => fTitle.focus({preventScroll: true}), 60);
+  }
+  function closeModal() { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); }
+  function addTask() {
+    const title = fTitle.value.trim();
+    if (!title) { fTitle.classList.add('err'); form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake'); fTitle.focus(); return null; }
+    const t = {id: state.nextId++, title, who: $('#fAssignee').value, prio: form.prio.value || 'medium', tag: $('#fTag').value, due: 'Nov 17', cm: 0, status: $('#fStatus').value};
+    const firstIdx = state.tasks.findIndex(x => x.status === t.status);
+    state.tasks.splice(firstIdx < 0 ? state.tasks.length : firstIdx, 0, t);
+    if (filter !== 'all' || query) { filter = 'all'; query = ''; $('#search').value = ''; document.querySelectorAll('.fchip').forEach(x => x.classList.toggle('on', x.dataset.f === 'all')); }
+    save(); closeModal(); render(t.id);
+    toast(`✨ Task TF-${t.id} added to ${COLS.find(c => c.id === t.status).name}`);
+    return t;
+  }
+  form.addEventListener('submit', e => { e.preventDefault(); addTask(); });
+  fTitle.addEventListener('input', () => fTitle.classList.remove('err'));
+  $('#newTask').addEventListener('click', () => openModal());
+  $('#mClose').addEventListener('click', closeModal);
+  $('#mCancel').addEventListener('click', closeModal);
+  modal.addEventListener('mousedown', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+    if ((e.key || '').toLowerCase() === 'n' && !modal.classList.contains('open') && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); openModal(); }
+  });
+  $('#resetBtn').addEventListener('click', () => { state = seedState(); save(); render(); toast('↺ Demo data restored'); });
+  document.querySelectorAll('a[href="#"]').forEach(a => a.addEventListener('click', e => e.preventDefault()));
+
+  let toastT;
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  render();
+
+  /* ---------- Animated (FLIP) move used by the tour ---------- */
+  function animateMove(id, status, index = 0, dur = 760) {
+    const cards = [...board.querySelectorAll('.card')];
+    const first = new Map(cards.map(c => [c, c.getBoundingClientRect()]));
+    const el = cardEl(id), list = listOf(status);
+    const ref = list.querySelectorAll('.card')[index] || null;
+    const empty = list.querySelector('.empty'); if (empty) empty.remove();
+    list.insertBefore(el, ref);
+    el.classList.remove('lift', 'new');
+    syncFromDOM();
+    const anims = [];
+    cards.forEach(c => {
+      const f = first.get(c), l = c.getBoundingClientRect();
+      const dx = f.left - l.left, dy = f.top - l.top;
+      if (!dx && !dy) return;
+      if (c === el) {
+        c.style.zIndex = 20;
+        anims.push(c.animate([
+          {transform:`translate(${dx}px,${dy}px) scale(1.04) rotate(-1.5deg)`, boxShadow:'0 24px 40px -12px rgba(24,24,27,.35)'},
+          {transform:'translate(0,0) scale(1.04) rotate(1deg)', boxShadow:'0 24px 40px -12px rgba(24,24,27,.35)', offset:.85},
+          {transform:'none', boxShadow:'0 1px 2px rgba(24,24,27,.05)'}
+        ], {duration:dur, easing:'cubic-bezier(.45,0,.2,1)'}).finished.then(() => { c.style.zIndex = ''; }));
+      } else {
+        anims.push(c.animate([{transform:`translate(${dx}px,${dy}px)`}, {transform:'none'}], {duration:dur * .8, easing:'cubic-bezier(.2,.8,.2,1)'}).finished);
+      }
+    });
+    return {el, done: Promise.all(anims)};
+  }
+
+  /* ---------- Demo tour ---------- */
+  const cur = $('#tourCursor');
+  function cursorTo(x, y, dur = 600) {
+    cur.style.transitionDuration = dur + 'ms, 300ms';
+    cur.style.transform = `translate(${x - 4}px, ${y - 3}px)`;
+    return sleep(dur);
+  }
+  function cursorToEl(el, dur, ox = .5, oy = .5) {
+    const r = el.getBoundingClientRect();
+    return cursorTo(r.left + r.width * ox, r.top + r.height * oy, dur);
+  }
+  async function tap() { cur.classList.remove('click'); void cur.offsetWidth; cur.classList.add('click'); await sleep(160); }
+  async function tourMove(id, status, pause = 280) {
+    const card = cardEl(id); if (!card) return;
+    await cursorToEl(card, 480, .45, .35);
+    await tap();
+    card.classList.add('lift');
+    await sleep(170);
+    const {el, done} = animateMove(id, status, 0, 760);
+    const r = el.getBoundingClientRect();
+    cursorTo(r.left + r.width * .45, r.top + r.height * .35, 760);
+    await done;
+    await sleep(pause);
+  }
+
+  let touring = false;
+  window.demoTour = async () => {
+    if (touring) return;
+    touring = true;
+    try {
+      closeModal();
+      filter = 'all'; query = ''; $('#search').value = '';
+      document.querySelectorAll('.fchip').forEach(x => x.classList.toggle('on', x.dataset.f === 'all'));
+      state = seedState(); save(); render();
+      window.scrollTo({top: 0, behavior: 'instant'});
+      board.scrollLeft = 0;
+      cur.style.transitionDuration = '0ms, 0ms';
+      cur.style.transform = `translate(${Math.round(innerWidth * .5)}px, ${Math.round(innerHeight * .55)}px)`;
+      void cur.offsetWidth;
+      cur.classList.add('show');
+      await sleep(400);
+
+      // 1. Open the modal and create a task
+      const nb = $('#newTask');
+      await cursorToEl(nb, 650); await tap();
+      openModal();
+      await sleep(380);
+      await cursorToEl(fTitle, 420, .2, .5); await tap();
+      fTitle.focus({preventScroll: true});
+      for (const ch of 'Launch pricing page A/B test') { fTitle.value += ch; await sleep(42); }
+      await sleep(220);
+      const sel = $('#fAssignee');
+      await cursorToEl(sel, 380, .4, .5); await tap();
+      sel.value = 'RM'; sel.classList.add('flash'); setTimeout(() => sel.classList.remove('flash'), 500);
+      await sleep(260);
+      const hi = form.querySelector('input[value="high"]');
+      await cursorToEl(hi.nextElementSibling, 380); await tap();
+      hi.checked = true;
+      await sleep(260);
+      await cursorToEl($('#mSubmit'), 380); await tap();
+      const t = addTask();
+      await sleep(750);
+
+      // 2. Move cards across the board with a visible animation
+      if (t) await tourMove(t.id, 'progress');
+      await tourMove(104, 'review');
+      await tourMove(107, 'done');
+      await tourMove(108, 'done', 450);
+    } finally {
+      cur.classList.remove('show');
+      touring = false;
+    }
+  };
+})();
+</script>
+</body>
+</html>
